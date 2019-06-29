@@ -54,7 +54,7 @@
 
 ## 安装
 
-如何安装? [去下载](/tree/master/releases)
+如何安装? [去下载](/releases/latest)
 
 
 

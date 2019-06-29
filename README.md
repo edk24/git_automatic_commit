@@ -1,5 +1,7 @@
 # git自动提交工具
 
+
+
 这是一个**易语言**编写的程序, 请关闭`杀毒软件`运行.  因为它会报病毒. 其实并没有病毒;
 
 
@@ -54,7 +56,7 @@
 
 ## 安装
 
-如何安装? [去下载](/releases/latest)
+如何安装? [去下载](https://github.com/edk24/git_automatic_commit/releases/latest)
 
 
 

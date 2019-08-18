@@ -138,10 +138,10 @@ func (w *Watch) watchDir(dir string) {
 func main() {
 
 	// 当前是否在git工作目录
-	// if (!IsDir("./.git")) {
-	// 	fmt.Println("这不是一个有效的git工作目录!");
-	// 	return;
-	// }
+	if (!IsDir("./.git")) {
+		fmt.Println("这不是一个有效的git工作目录!");
+		return;
+	}
 
 
 
@@ -159,8 +159,7 @@ func showMessage() {
 	loading := "\\";
 
 	for !_fatal {
-		// fmt.Println("\033[H\033[2J")
-		fmt.Printf("\033[%dA\033[K", 2)
+		fmt.Println("\033[H\033[2J")
 
 		// 是否在提交
 		if (_look) {
@@ -183,8 +182,8 @@ func showMessage() {
 			}
 			
 		} else {
-			fmt.Println("状态:", "正常")
-			fmt.Println("统计:", "成功", _i, "次, 失败", _n, "次")
+			fmt.Println("状态:正常 \033[K\n")
+			fmt.Println("统计:成功", _i, "次, 失败", _n, "次 \033[K\n")
 		}
 
 		time.Sleep(200 * time.Millisecond)
@@ -260,6 +259,4 @@ func IsDir(path string) bool {
 }
 
 
-// 基于 http://www.cppblog.com/kenkao/archive/2018/07/31/215809.html 的子目录监控代码完成
-// 特别想要git自动提交工具, 所以写了这个程序.  第一次写go  google查了很多才算憋出来了.   
-// 欢迎指正代码中的错误和参与完善.  小团队用git真的糟心.  提交信息对我们没卵用,  只是希望保存后可以马上看到效果. 
+// 参考 http://www.cppblog.com/kenkao/archive/2018/07/31/215809.html 的子目录监控代码完成

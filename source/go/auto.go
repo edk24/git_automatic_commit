@@ -18,7 +18,12 @@ type Watch struct {
 
 var (
 	_look bool
-	_i int
+	_i int // 成功次数
+	_n int // 失败次数
+
+	_current_cmd[] string
+	_error string
+	_fatal bool // 致命错误 (需要手动解决冲突)
 )
  
 //监控目录
@@ -86,41 +91,41 @@ func (w *Watch) watchDir(dir string) {
 					
 					bool, out := git([]string{"status", "-s"})
 					if (bool==false || out == "") {
-						// fmt.Println("没有改变")
 						_look = false
 						break
 					}
 
 					bool, out = git([]string{"add", "."})
 					if (bool==false) {
-						fmt.Println("[错误]", out)
+						godie(out, true)
 						break
 					}
 
 					bool, out = git([]string{"commit", "-m", time.Now().Format("2006-01-02 15:04:05")})
 					if (bool==false) {
-						fmt.Println("[错误]", out)
+						godie(out, true)
 						break
 					}
 
 					bool, out = git([]string{"pull", "origin", "master"})
 					if (bool==false) {
-						fmt.Println("[错误]", out)
+						godie(out, true)
 						break
 					}
 
 					bool, out = git([]string{"push", "origin", "master"})
 					if (bool==false) {
-						fmt.Println("[错误]", out)
+						godie(out, true)
 						break
 					}
+
+					// 推送成功
 					_i++;
-					fmt.Println("推送成功, 已成功", _i, "次")
 					_look = false
                 }
             case err := <-w.watch.Errors:
                 {
-                    fmt.Println("error : ", err);
+                    fmt.Println(err)
                     return;
                 }
             }
@@ -133,19 +138,72 @@ func (w *Watch) watchDir(dir string) {
 func main() {
 
 	// 当前是否在git工作目录
-	if (!IsDir("./.git")) {
-		fmt.Println("这不是一个有效的git工作目录!");
-	}
+	// if (!IsDir("./.git")) {
+	// 	fmt.Println("这不是一个有效的git工作目录!");
+	// 	return;
+	// }
 
-	fmt.Println("[Name]", "GIT自动提交工具")
-	fmt.Println("[author]", "余小波 <1421926943@qq.com>")
 
-    watch, _ := fsnotify.NewWatcher()
+
+	go showMessage();
+
+	watch, _ := fsnotify.NewWatcher()
     w := Watch{
         watch: watch,
     }
     w.watchDir(".");
-    select {};
+	select {};
+}
+
+func showMessage() {
+	loading := "\\";
+
+	for !_fatal {
+		// fmt.Println("\033[H\033[2J")
+		fmt.Printf("\033[%dA\033[K", 2)
+
+		// 是否在提交
+		if (_look) {
+			switch loading {
+			case "\\":
+				loading = "/"
+				break
+			case "/":
+				loading = "-"
+				break
+			case "-":
+				loading = "\\"
+				break
+			}
+
+			fmt.Println("状态:", "推送中")
+			fmt.Println("执行: ", _current_cmd, "[ "+loading+" ]")
+			if (_error != "") {
+				fmt.Println("输出: ", _error)
+			}
+			
+		} else {
+			fmt.Println("状态:", "正常")
+			fmt.Println("统计:", "成功", _i, "次, 失败", _n, "次")
+		}
+
+		time.Sleep(200 * time.Millisecond)
+	}
+}
+
+func godie(out string, fatal bool) {
+	_error = out
+	_fatal = fatal
+	_n++
+
+	var input string
+	fmt.Println("错误:", out)
+	fmt.Println("警告:","请手动解决合并冲突后按回车继续监听")
+	fmt.Scanln(&input)
+
+	_fatal = false
+	_error = ""
+	go showMessage()
 }
 
 
@@ -157,15 +215,17 @@ func git(params []string) (bool, string) {
 	cmd.Stdout = bout
 	cmd.Stderr = berr
 	err := cmd.Run()
-	fmt.Println(">", cmd.Args)
+
+	_current_cmd = cmd.Args
 
 	if err != nil {
 		_look = false;
-		return false, berr.String();
+		_error = berr.String();
+		return false, _error;
 	}
 
 	if (bout.String() != "") {
-		fmt.Println(bout.String());
+		//fmt.Println(bout.String());
 	}
 	return true, bout.String();
 }
@@ -198,6 +258,7 @@ func IsDir(path string) bool {
 	}
 	return s.IsDir()
 }
+
 
 // 基于 http://www.cppblog.com/kenkao/archive/2018/07/31/215809.html 的子目录监控代码完成
 // 特别想要git自动提交工具, 所以写了这个程序.  第一次写go  google查了很多才算憋出来了.   

@@ -1,5 +1,5 @@
 package main;
- 
+
 import (
     "github.com/fsnotify/fsnotify"
     "fmt"
@@ -13,7 +13,7 @@ import (
 )
  
 type Watch struct {
-    watch *fsnotify.Watcher;
+    watch *fsnotify.Watcher
 }
 
 var (
